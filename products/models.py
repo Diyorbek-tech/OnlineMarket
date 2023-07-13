@@ -1,6 +1,10 @@
 from accounts.models import  User
 from django.db import models
 from base.BaseModel import Base_Model
+
+from django.template.defaultfilters import slugify
+
+
 '''
 Market
 Category
@@ -12,6 +16,10 @@ Images
 class Size(Base_Model):
     sub_cat=models.ForeignKey("Sub_Category",on_delete=models.CASCADE)
     size=models.CharField(max_length=15)
+
+    def __str__(self):
+        return f"{self.sub_cat.sub_cat_name} of {self.size}"
+
 
 class Category(Base_Model):
     cat_name=models.CharField(max_length=100)
@@ -44,16 +52,15 @@ class Product(Base_Model):
     rating=models.FloatField(default=0.0)
     product_usage=models.TextField( blank=True, null=True)
     price=models.IntegerField(default=0)
+    slug=models.SlugField(blank=True,null=True,unique=True)
+
+    def save(self,*args,**kwargs):
+        self.slug=slugify(self.pro_name)
+        return super().save(*args,**kwargs)
 
     def get_product_sizes(self):
         sizes=Size.objects.filter(sub_cat=self.sub_category)
         return sizes
-
-
-
-
-
-
 
     def __str__(self):
         return self.pro_name

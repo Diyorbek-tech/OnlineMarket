@@ -12,16 +12,20 @@ class User(AbstractUser):
 
     role=models.CharField(max_length=10,choices=Role.choices)
 
-    def save(self):
+    def save(self,*args,**kwargs):
         if not self.pk:
             self.role=self.base_role
-            return super(User,self).save()
+            return super().save(*args,**kwargs)
 
 class Seller(User):
     base_role = User.Role.SELLER
+    class Meta():
+        proxy=True
 
 class Customer(User):
     base_role = User.Role.CUSTOMER
+    class Meta():
+        proxy=True
 
 
 

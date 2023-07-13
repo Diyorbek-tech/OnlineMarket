@@ -5,29 +5,10 @@
     <title>Title</title>
 </head>
 <body>
-
-{{ basket_list }}
-<br>
-
-{{ product }}
-<br>
-{% for i in product %}
-{{ i.count}}
-{{ i.product.pro_name}}
-
-{{ i.product.price}}
-
-    {% for j in i.all %}
-    {{ i.productimages_set }}
+{% for i in products %}
+    <a href="{% url 'single_pro' i.slug %}">{{ i.pro_name}} </a>
+    <br>
 {% endfor %}
-<br>
-{% endfor %}
-<br>
-{{ summa }}
-
-
-
-
 
 
 </body>
