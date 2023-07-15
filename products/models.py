@@ -4,14 +4,9 @@ from base.BaseModel import Base_Model
 
 from django.template.defaultfilters import slugify
 
+from payments.models import Payment,Coupon
 
-'''
-Market
-Category
-Sub_Category
-product
-Images
-'''
+
 
 class Size(Base_Model):
     sub_cat=models.ForeignKey("Sub_Category",on_delete=models.CASCADE)
@@ -19,7 +14,6 @@ class Size(Base_Model):
 
     def __str__(self):
         return f"{self.sub_cat.sub_cat_name} of {self.size}"
-
 
 class Category(Base_Model):
     cat_name=models.CharField(max_length=100)
@@ -34,7 +28,6 @@ class Sub_Category(Base_Model):
 
     def __str__(self):
         return self.sub_cat_name
-
 class Market(Base_Model):
     market_name=models.CharField(max_length=200)
     market_info = models.CharField(max_length=100, blank=True, null=True)
@@ -42,7 +35,6 @@ class Market(Base_Model):
 
     def __str__(self):
         return self.market_name
-
 
 class Product(Base_Model):
     pro_name=models.CharField(max_length=255)
@@ -53,6 +45,9 @@ class Product(Base_Model):
     product_usage=models.TextField( blank=True, null=True)
     price=models.IntegerField(default=0)
     slug=models.SlugField(blank=True,null=True,unique=True)
+    discount=models.IntegerField(default=0,blank=True,null=True)
+
+
 
     def save(self,*args,**kwargs):
         self.slug=slugify(self.pro_name)
@@ -69,9 +64,6 @@ class Images(Base_Model):
     img_file=models.ImageField(upload_to='images/')
     product=models.ForeignKey(Product, related_name='product_images',on_delete=models.CASCADE)
 
-
-
-
 class Comment(Base_Model):
     comment_text=models.TextField()
     user=models.ForeignKey(User,on_delete=models.DO_NOTHING)
@@ -83,24 +75,73 @@ class Comment(Base_Model):
         return self.comment_text[:10]
 
 class Order_one(Base_Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     product=models.ForeignKey(Product,on_delete=models.CASCADE)
     count =models.IntegerField(default=1)
     is_ordered = models.BooleanField(default=False)
 
 
+    def get_absolute_price(self):
+        if self.product.discount:
+            return self.product.price-self.product.discount
+        else:
+            return self.product.price
+    def get_order_one_price(self):
+        return self.get_absolute_price() * self.count
+
+
+
     def __str__(self):
         return self.product.pro_name
-
-
 
 class Order(Base_Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE)
     order_one=models.ManyToManyField(Order_one)
 
+
+    shipping_address=models.ForeignKey("Address",on_delete=models.RESTRICT,related_name="shipping_order",blank=True,null=True)
+    billing_address=models.ForeignKey("Address",on_delete=models.RESTRICT,related_name="billing_order",blank=True,null=True)
+
+    payment=models.ForeignKey(to=Payment,on_delete=models.RESTRICT,blank=True,null=True)
+    coupon=models.ForeignKey(to=Coupon,on_delete=models.RESTRICT,blank=True,null=True)
+
+    on_rode=models.BooleanField(default=False)
+    delivered=models.BooleanField(default=False)
+    received=models.BooleanField(default=False)
+
     is_ordered=models.BooleanField(default=False)
+
+    def get_order_price(self):
+        total=0
+        for i in self.order_one.all():
+            total+=i.get_order_one_price()
+        return total
+
+    def get_order_total_with_cp(self):
+        return self.get_order_price()-self.coupon.amount
+
+
+
 
     def __str__(self):
         return self.order_one.first().product.pro_name
+
+class Address(Base_Model):
+    ADDRESS_TYPE=(
+       ('SHIPPING','SHIPPING'),
+       ('BILLING','BILLING'),
+    )
+
+    user=models.ForeignKey(User,on_delete=models.CASCADE)
+    city=models.CharField(max_length=50)
+    country=models.CharField(max_length=50)
+    street=models.CharField(max_length=100)
+    house=models.CharField(max_length=100)
+    zip_code=models.IntegerField()
+
+    address_type=models.CharField(choices=ADDRESS_TYPE,max_length=30)
+
+
 
 
 
