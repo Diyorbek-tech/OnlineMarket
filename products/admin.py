@@ -1,7 +1,8 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import Category,Product,Market,Images,Comment,Sub_Category,Order_one,Order,Size,Address
+from .models import Category,Product,Market,Images,\
+    Comment,Sub_Category,Order_one,Order,Size,Address,Reply,Message
 
 admin.site.register(Category)
 admin.site.register(Product)
@@ -13,3 +14,5 @@ admin.site.register(Order_one)
 admin.site.register(Order)
 admin.site.register(Size)
 admin.site.register(Address)
+admin.site.register(Reply)
+admin.site.register(Message)
